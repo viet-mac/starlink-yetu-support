@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Starlink Yetu — Support</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sand:#F1E8D8;
+    --sand-dim:#E7DCC6;
+    --ink:#151C2C;
+    --ink-soft:#2B3348;
+    --clay:#BF5730;
+    --clay-dim:#a84a27;
+    --signal-ok:#4C7A5B;
+    --signal-warn:#D9A441;
+    --signal-down:#B23A2E;
+    --charcoal:#2B2420;
+    --line: rgba(21,28,44,0.12);
+    --white:#FFFCF6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--sand);
+    color:var(--charcoal);
+    font-family:'Space Grotesk', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  a{color:inherit;}
+
+  /* ---------- header ---------- */
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:20px 40px;
+    border-bottom:1px solid var(--line);
+    background:var(--sand);
+    position:sticky;
+    top:0;
+    z-index:50;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .brand svg{width:34px;height:34px;flex-shrink:0;}
+  .brand-text{display:flex;flex-direction:column;line-height:1.05;}
+  .brand-text .name{font-family:'Fraunces',serif;font-weight:600;font-size:19px;}
+  .brand-text .sub{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-soft);opacity:0.65;}
+  nav{display:flex;gap:32px;align-items:center;}
+  nav a{
+    font-size:14px;
+    text-decoration:none;
+    color:var(--ink-soft);
+    padding-bottom:2px;
+    border-bottom:1px solid transparent;
+    cursor:pointer;
+  }
+  nav a:hover{border-bottom:1px solid var(--clay);color:var(--charcoal);}
+  .btn-primary{
+    background:var(--clay);
+    color:var(--white);
+    border:none;
+    padding:10px 20px;
+    border-radius:3px;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    transition:background 0.15s ease;
+  }
+  .btn-primary:hover{background:var(--clay-dim);}
+  .btn-ghost{
+    background:transparent;
+    border:1px solid var(--ink);
+    color:var(--ink);
+    padding:9px 18px;
+    border-radius:3px;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:500;
+    font-size:14px;
+    cursor:pointer;
+  }
+
+  /* ---------- hero / stats ---------- */
+  .hero{
+    display:grid;
+    grid-template-columns: 1.1fr 1.4fr;
+    gap:0;
+    border-bottom:1px solid var(--line);
+  }
+  .hero-copy{
+    padding:56px 48px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:24px;
+    border-right:1px solid var(--line);
+  }
+  .eyebrow{
+    font-size:12px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--clay);
+    font-weight:600;
+  }
+  .hero-copy h1{
+    font-size:40px;
+    line-height:1.08;
+    margin:0;
+    max-width:11ch;
+  }
+  .hero-copy p.lede{
+    font-size:15px;
+    line-height:1.6;
+    color:var(--ink-soft);
+    max-width:38ch;
+    margin:0;
+  }
+  .stat-row{
+    display:flex;
+    gap:0;
+    margin-top:8px;
+    border-top:1px solid var(--line);
+    padding-top:20px;
+  }
+  .stat{
+    flex:1;
+    padding-right:20px;
+  }
+  .stat .num{
+    font-family:'Fraunces',serif;
+    font-size:30px;
+    font-weight:600;
+    color:var(--ink);
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+  }
+  .stat .num .dot{width:8px;height:8px;border-radius:50%;background:var(--signal-ok);display:inline-block;margin-left:4px;}
+  .stat .label{font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-soft);opacity:0.7;margin-top:4px;}
+
+  .map-wrap{position:relative;}
+  #map{height:100%;min-height:460px;width:100%;}
+  .map-legend{
+    position:absolute;
+    bottom:16px;
+    left:16px;
+    z-index:400;
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:10px 14px;
+    font-size:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08);
+  }
+  .map-legend .row{display:flex;align-items:center;gap:8px;margin:3px 0;}
+  .map-legend .sw{width:9px;height:9px;border-radius:50%;}
+  .sample-flag{
+    position:absolute;
+    top:16px;
+    right:16px;
+    z-index:400;
+    background:var(--ink);
+    color:var(--sand);
+    font-size:11px;
+    padding:6px 10px;
+    border-radius:3px;
+    letter-spacing:0.03em;
+  }
+
+  /* ---------- directory ---------- */
+  .section-label{
+    padding:36px 48px 0 48px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+  }
+  .section-label h2{font-size:22px;margin:0;}
+  .section-label .count{font-size:13px;color:var(--ink-soft);}
+  .directory{
+    padding:20px 48px 48px 48px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+    gap:14px;
+  }
+  .school-card{
+    border:1px solid var(--line);
+    background:var(--white);
+    border-radius:4px;
+    padding:16px;
+    cursor:pointer;
+    transition:border-color 0.15s ease, transform 0.1s ease;
+  }
+  .school-card:hover{border-color:var(--clay);transform:translateY(-1px);}
+  .school-card.active{border-color:var(--clay);box-shadow:0 0 0 1px var(--clay);}
+  .school-card .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .school-card .sname{font-family:'Fraunces',serif;font-weight:600;font-size:15px;line-height:1.25;}
+  .status-chip{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    padding:3px 8px;
+    border-radius:20px;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+  .status-online{background:rgba(76,122,91,0.14);color:var(--signal-ok);}
+  .status-warn{background:rgba(217,164,65,0.18);color:#8a6314;}
+  .status-down{background:rgba(178,58,46,0.14);color:var(--signal-down);}
+  .school-card .region{font-size:12px;color:var(--ink-soft);opacity:0.75;margin-top:6px;}
+  .school-card .meta{font-size:11px;color:var(--ink-soft);opacity:0.6;margin-top:10px;}
+
+  /* ---------- ticket form ---------- */
+  .ticket-section{
+    background:var(--ink);
+    color:var(--sand);
+    padding:60px 48px 70px 48px;
+  }
+  .ticket-inner{
+    max-width:920px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:0.8fr 1.2fr;
+    gap:56px;
+  }
+  .ticket-intro .eyebrow{color:#E7A46E;}
+  .ticket-intro h2{
+    color:var(--white);
+    font-size:30px;
+    margin:10px 0 16px 0;
+    max-width:10ch;
+  }
+  .ticket-intro p{
+    font-size:14px;
+    line-height:1.65;
+    color:rgba(241,232,216,0.72);
+    max-width:34ch;
+  }
+  .ticket-intro .response-note{
+    margin-top:28px;
+    border-top:1px solid rgba(241,232,216,0.16);
+    padding-top:18px;
+    font-size:12px;
+    color:rgba(241,232,216,0.55);
+  }
+  form{display:flex;flex-direction:column;gap:18px;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:rgba(241,232,216,0.6);}
+  .field input, .field select, .field textarea{
+    background:rgba(241,232,216,0.06);
+    border:1px solid rgba(241,232,216,0.2);
+    color:var(--white);
+    padding:11px 12px;
+    border-radius:3px;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:14px;
+  }
+  .field select{ background: rgba(241,232,216,0.06); color: var(--white);}
+  .field select option{color:#111;}
+  .field input::placeholder, .field textarea::placeholder{color:rgba(241,232,216,0.35);}
+  .field input:focus, .field select:focus, .field textarea:focus{
+    outline:none;
+    border-color:var(--clay);
+  }
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .urgency-row{display:flex;gap:8px;}
+  .urgency-pill{
+    flex:1;
+    text-align:center;
+    padding:10px 8px;
+    border:1px solid rgba(241,232,216,0.2);
+    border-radius:3px;
+    font-size:12.5px;
+    cursor:pointer;
+    color:rgba(241,232,216,0.75);
+  }
+  .urgency-pill.selected{
+    border-color:var(--clay);
+    background:rgba(191,87,48,0.18);
+    color:var(--white);
+  }
+  .submit-row{display:flex;align-items:center;gap:16px;margin-top:6px;}
+  .file-note{font-size:11px;color:rgba(241,232,216,0.45);}
+
+  footer{
+    padding:26px 48px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:12px;
+    color:var(--ink-soft);
+    opacity:0.7;
+    border-top:1px solid var(--line);
+  }
+
+  @media (max-width:900px){
+    .hero{grid-template-columns:1fr;}
+    .hero-copy{border-right:none;border-bottom:1px solid var(--line);}
+    .ticket-inner{grid-template-columns:1fr;}
+    header{padding:16px 20px;}
+    .section-label, .directory, .hero-copy{padding-left:20px;padding-right:20px;}
+    .ticket-section{padding:44px 20px;}
+    nav{gap:18px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <svg viewBox="0 0 40 40" fill="none">
+      <circle cx="20" cy="20" r="19" stroke="#BF5730" stroke-width="1.4"/>
+      <path d="M20 6 L20 14" stroke="#BF5730" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M12 34 L28 12" stroke="#151C2C" stroke-width="1.6" stroke-linecap="round"/>
+      <circle cx="28" cy="12" r="2.4" fill="#BF5730"/>
+      <path d="M23 17 Q28 12 33 17" stroke="#BF5730" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    </svg>
+    <div class="brand-text">
+      <span class="name">Starlink Yetu</span>
+      <span class="sub">Support · Our Future Prize</span>
+    </div>
+  </div>
+  <nav>
+    <a href="#map-section">Map</a>
+    <a href="#directory">Schools</a>
+    <a href="#ticket-section">Submit a ticket</a>
+    <button class="btn-ghost" onclick="document.getElementById('ticket-section').scrollIntoView({behavior:'smooth'})">Check ticket status</button>
+  </nav>
+</header>
+
+<section class="hero" id="map-section">
+  <div class="hero-copy">
+    <span class="eyebrow">Connectivity network</span>
+    <h1>Every dish we've installed, in one place.</h1>
+    <p class="lede">A live map of the schools connected through Our Future Prize and Mac House Studio's Starlink rollout — so a dropped signal in Murang'a gets to us as fast as one on the coast.</p>
+    <div class="stat-row">
+      <div class="stat">
+        <div class="num">18<span class="dot"></span></div>
+        <div class="label">Schools online</div>
+      </div>
+      <div class="stat">
+        <div class="num" style="color:var(--signal-down)">2</div>
+        <div class="label">Open tickets</div>
+      </div>
+      <div class="stat">
+        <div class="num">3</div>
+        <div class="label">Regions covered</div>
+      </div>
+    </div>
+  </div>
+  <div class="map-wrap">
+    <div class="sample-flag">Sample data — swap in your full roster</div>
+    <div id="map"></div>
+    <div class="map-legend">
+      <div class="row"><span class="sw" style="background:var(--signal-ok)"></span>Online</div>
+      <div class="row"><span class="sw" style="background:var(--signal-warn)"></span>Intermittent</div>
+      <div class="row"><span class="sw" style="background:var(--signal-down)"></span>Open ticket</div>
+    </div>
+  </div>
+</section>
+
+<div class="section-label" id="directory">
+  <h2>School directory</h2>
+  <span class="count" id="school-count"></span>
+</div>
+<div class="directory" id="directory-grid"></div>
+
+<section class="ticket-section" id="ticket-section">
+  <div class="ticket-inner">
+    <div class="ticket-intro">
+      <span class="eyebrow">Report an issue</span>
+      <h2>Something down at your school?</h2>
+      <p>Tell us what's happening and we'll route it to the right person — hardware, power, or the dish itself. Teachers, admins, and Starlink champions can all submit.</p>
+      <div class="response-note">Most tickets get a first response within 48 hours. Complete outages are prioritized.</div>
+    </div>
+    <form id="ticket-form" onsubmit="handleSubmit(event)">
+      <div class="field">
+        <label for="school">School</label>
+        <select id="school" required>
+          <option value="">Select a school</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="reporter">Your name</label>
+          <input type="text" id="reporter" placeholder="e.g. Alan Mwangi" required>
+        </div>
+        <div class="field">
+          <label for="role">Your role</label>
+          <select id="role" required>
+            <option value="">Select</option>
+            <option>Teacher</option>
+            <option>School administrator</option>
+            <option>Starlink champion</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="category">What's going on</label>
+        <select id="category" required>
+          <option value="">Select an issue</option>
+          <option>No signal / fully down</option>
+          <option>Intermittent connection</option>
+          <option>Dish physically damaged</option>
+          <option>Power / cable issue</option>
+          <option>Router or Wi-Fi issue</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="description">Describe the issue</label>
+        <textarea id="description" rows="4" placeholder="When did it start? What have you already tried?" required></textarea>
+      </div>
+      <div class="field">
+        <label>How urgent is this</label>
+        <div class="urgency-row" id="urgency-row">
+          <div class="urgency-pill" data-val="Low">Low — can wait</div>
+          <div class="urgency-pill" data-val="Medium">Medium — this week</div>
+          <div class="urgency-pill" data-val="High">High — fully down</div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="phone">Phone number</label>
+          <input type="tel" id="phone" placeholder="+254 7...">
+        </div>
+        <div class="field">
+          <label for="email">Email (optional)</label>
+          <input type="email" id="email" placeholder="you@school.ac.ke">
+        </div>
+      </div>
+      <div class="submit-row">
+        <button type="submit" class="btn-primary">Submit ticket</button>
+        <span class="file-note">Photo upload will attach here in the full build</span>
+      </div>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <span>Starlink Yetu — a Dijitali Yetu tool · Our Future Prize × Mac House Studio</span>
+  <span>Mockup · not connected to live data</span>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+  // ---- SAMPLE DATA: replace with your real 20-school Dijitali Yetu roster ----
+  const schools = [
+    { name: "Kipusi Junior School", region: "Murang'a County", lat: -0.7169, lng: 37.1502, status: "online", lastCheckin: "2 hrs ago", openTickets: 0 },
+    { name: "Gaturi Primary", region: "Murang'a County", lat: -0.7590, lng: 37.1120, status: "online", lastCheckin: "5 hrs ago", openTickets: 0 },
+    { name: "Kangema Secondary", region: "Murang'a County", lat: -0.6280, lng: 37.0510, status: "warn", lastCheckin: "1 day ago", openTickets: 0 },
+    { name: "Kigumo Girls", region: "Murang'a County", lat: -0.8460, lng: 37.0290, status: "online", lastCheckin: "3 hrs ago", openTickets: 0 },
+    { name: "Shelemba Junior School", region: "Nairobi", lat: -1.3050, lng: 36.8500, status: "online", lastCheckin: "1 hr ago", openTickets: 0 },
+    { name: "Kibera Hope Academy", region: "Nairobi", lat: -1.3130, lng: 36.7820, status: "down", lastCheckin: "2 days ago", openTickets: 1 },
+    { name: "Mathare Bright Futures", region: "Nairobi", lat: -1.2610, lng: 36.8570, status: "online", lastCheckin: "6 hrs ago", openTickets: 0 },
+    { name: "Kayole Unity Primary", region: "Nairobi", lat: -1.2790, lng: 36.9330, status: "online", lastCheckin: "4 hrs ago", openTickets: 0 },
+    { name: "Rafiki Mwema Learning Center", region: "Nakuru", lat: -0.3031, lng: 36.0800, status: "online", lastCheckin: "3 hrs ago", openTickets: 0 },
+    { name: "Nakuru East Academy", region: "Nakuru", lat: -0.2820, lng: 36.0680, status: "warn", lastCheckin: "18 hrs ago", openTickets: 0 },
+    { name: "Bamburi Coastal Primary", region: "Mombasa", lat: -3.9880, lng: 39.7180, status: "online", lastCheckin: "5 hrs ago", openTickets: 0 },
+    { name: "Likoni Shore School", region: "Mombasa", lat: -4.0870, lng: 39.6620, status: "down", lastCheckin: "1 day ago", openTickets: 1 },
+    { name: "Nyali Beach Academy", region: "Mombasa", lat: -4.0180, lng: 39.7160, status: "online", lastCheckin: "2 hrs ago", openTickets: 0 },
+  ];
+
+  const statusMeta = {
+    online: { color: "#4C7A5B", label: "Online" },
+    warn:   { color: "#D9A441", label: "Intermittent" },
+    down:   { color: "#B23A2E", label: "Open ticket" },
+  };
+
+  // ---- map ----
+  const map = L.map('map', { scrollWheelZoom: false }).setView([-0.9, 37.4], 6.4);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 18
+  }).addTo(map);
+
+  function dishIcon(color){
+    return L.divIcon({
+      className: '',
+      html: `<div style="width:16px;height:16px;border-radius:50%;background:${color};border:2.5px solid #FFFCF6;box-shadow:0 1px 4px rgba(0,0,0,0.35);"></div>`,
+      iconSize: [16,16],
+      iconAnchor: [8,8]
+    });
+  }
+
+  const markers = {};
+  schools.forEach(s => {
+    const m = L.marker([s.lat, s.lng], { icon: dishIcon(statusMeta[s.status].color) }).addTo(map);
+    m.bindPopup(`<strong>${s.name}</strong><br>${s.region}<br>${statusMeta[s.status].label} · checked in ${s.lastCheckin}`);
+    markers[s.name] = m;
+  });
+
+  // ---- directory ----
+  const grid = document.getElementById('directory-grid');
+  const schoolSelect = document.getElementById('school');
+  document.getElementById('school-count').textContent = schools.length + " schools";
+
+  schools.forEach(s => {
+    const chipClass = s.status === 'online' ? 'status-online' : s.status === 'warn' ? 'status-warn' : 'status-down';
+    const card = document.createElement('div');
+    card.className = 'school-card';
+    card.id = 'card-' + s.name.replace(/\s+/g,'-');
+    card.innerHTML = `
+      <div class="top-row">
+        <div class="sname">${s.name}</div>
+        <div class="status-chip ${chipClass}">${statusMeta[s.status].label}</div>
+      </div>
+      <div class="region">${s.region}</div>
+      <div class="meta">Last check-in ${s.lastCheckin}${s.openTickets ? ' · ' + s.openTickets + ' open ticket' : ''}</div>
+    `;
+    card.addEventListener('click', () => {
+      map.flyTo([s.lat, s.lng], 9, { duration: 0.8 });
+      markers[s.name].openPopup();
+      document.querySelectorAll('.school-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+    });
+    grid.appendChild(card);
+
+    const opt = document.createElement('option');
+    opt.value = s.name;
+    opt.textContent = s.name + " — " + s.region;
+    schoolSelect.appendChild(opt);
+  });
+
+  // ---- urgency pills ----
+  let urgency = null;
+  document.querySelectorAll('.urgency-pill').forEach(p => {
+    p.addEventListener('click', () => {
+      document.querySelectorAll('.urgency-pill').forEach(x => x.classList.remove('selected'));
+      p.classList.add('selected');
+      urgency = p.dataset.val;
+    });
+  });
+
+  function handleSubmit(e){
+    e.preventDefault();
+    const school = document.getElementById('school').value;
+    const reporter = document.getElementById('reporter').value;
+    alert(`Ticket captured (mockup only):\n\nSchool: ${school}\nReported by: ${reporter}\nUrgency: ${urgency || 'not set'}\n\nIn the full build this would create a ticket and notify the support team.`);
+    document.getElementById('ticket-form').reset();
+    document.querySelectorAll('.urgency-pill').forEach(x => x.classList.remove('selected'));
+    urgency = null;
+  }
+</script>
+
+</body>
+</html>
